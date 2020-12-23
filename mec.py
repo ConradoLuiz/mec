@@ -64,33 +64,48 @@ def t_error(t):
     t.lexer.skip(1)
 
 
-lex.lex(debug=1)
+lex.lex(debug=0)
 
 precedence = (
-    ('left', '+', '-'),
-    ('left', '*', '/'),
+    ('left', 'PLUS', 'MINUS'),
+    ('left', 'TIMES', 'DIVIDE'),
 )
 
 names = {}
 
 
+def p_program(p):
+    '''program : program statement
+               | statement'''
+    if len(p) == 2 and p[1]:
+        p[0] = {}
+        line, stat = p[1]
+        p[0][line] = stat
+    elif len(p) == 3:
+        p[0] = p[1]
+        if not p[0]:
+            p[0] = {}
+        if p[2]:
+            line, stat = p[2]
+            p[0][line] = stat
+
+
 def p_statement_assign(p):
     "statement : mec ID EQUALS expression NEWLINE"
-    print('assign', p[2], p[3], p[4])
     names[p[2]] = p[4]
-    print(names)
 
 
 def p_statement_expr(p):
-    'statement : expression'
-    print('mostrou', p[1])
+    '''statement : expression
+                 | expression NEWLINE'''
+    print(p[1])
 
 
 def p_expression_binop(p):
-    '''expression : expression '+' expression
-                  | expression '-' expression
-                  | expression '*' expression
-                  | expression '/' expression'''
+    '''expression : expression PLUS expression
+                  | expression MINUS expression
+                  | expression TIMES expression
+                  | expression DIVIDE expression'''
     if p[2] == '+':
         p[0] = p[1] + p[3]
     elif p[2] == '-':
@@ -102,20 +117,19 @@ def p_expression_binop(p):
 
 
 def p_expression_group(p):
-    "expression : '(' expression ')'"
+    "expression : LPAREN expression RPAREN"
     p[0] = p[2]
 
 
 def p_expression_number(p):
     "expression : INTEGER"
-    p[0] = p[1]
+    p[0] = int(p[1])
 
 
 def p_expression_name(p):
     "expression : ID"
     try:
         p[0] = names[p[1]]
-        print(names)
     except LookupError:
         print("Undefined name '%s'" % p[1])
         p[0] = 0
@@ -123,9 +137,9 @@ def p_expression_name(p):
 
 def p_error(p):
     if p:
-        print("Syntax error at '%s'" % p.value)
+        print("Erro de sintaxe em'%s'" % p.value)
     else:
-        print("Syntax error at EOF")
+        print("Erro de sintaxe em EOF")
 
 
 parser = yacc.yacc()
@@ -137,8 +151,7 @@ if len(sys.argv) == 2:
     with open(sys.argv[1]) as f:
         data = f.read()
     try:
-        prog = yacc.parse(data)
-        print('FINAL', prog)
+        prog = parser.parse(data, debug=0)
+        # print('FINAL', prog)
     except:
         print("Não foi possivel criar o parser!")
-        pass

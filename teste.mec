@@ -1,2 +1,5 @@
-mec x = 10
-x
+mec x = 4
+mec y = 3
+mec z = 5
+x + y * z
+(x + y) * z
