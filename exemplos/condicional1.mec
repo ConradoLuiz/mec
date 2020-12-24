@@ -1,0 +1,20 @@
+meczada x vale 4
+mec y vale 3
+
+mostrar(x)
+mostrar(y)
+
+se vdd { 
+  mec z vale 10
+  mostrar(x)
+  mostrar(y) 
+  mostrar(z)
+
+  se falso{
+    mostrar("nao aqui entrou falso")
+  } senao {
+    mostrar("entrou aqui")
+  }
+} senao {
+  mostrar("falso")
+}

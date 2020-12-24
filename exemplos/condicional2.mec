@@ -1,0 +1,10 @@
+meczada x vale 10
+mec y vale 5
+mostrar(x)
+
+se x < y{
+  mostrar(x)
+}
+senao {
+  mostrar(y)
+}

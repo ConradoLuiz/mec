@@ -34,7 +34,7 @@ def t_ID(t):
     return t
 
 
-# t_EQUALS = r'(vale)'
+t_EQUALS = r'='
 t_PLUS = r'\+'
 t_MINUS = r'-'
 t_TIMES = r'\*'
@@ -173,10 +173,9 @@ def p_expression_binop(p):
                   | expression MINUS expression
                   | expression TIMES expression
                   | expression DIVIDE expression
-                  | falso 
-                  | vdd'''
+                  | cond '''
     if len(p) == 2:
-        p[0] = True if p[1] == 'vdd' else False
+        p[0] = p[1]
     else:
         if p[2] == '+':
             p[0] = p[1] + p[3]
@@ -186,6 +185,31 @@ def p_expression_binop(p):
             p[0] = p[1] * p[3]
         elif p[2] == '/':
             p[0] = p[1] / p[3]
+
+
+def p_condicao(p):
+    '''cond : falso 
+            | vdd
+            | expression LT expression
+            | expression LE expression
+            | expression GT expression
+            | expression GE expression
+            | expression EQUALS EQUALS expression
+            '''
+    if len(p) == 2:
+        p[0] = p[1]
+    elif len(p) == 4:
+        op = p[2]
+        if op == '<':
+            p[0] = p[1] < p[3]
+        elif op == '<=':
+            p[0] = p[1] <= p[3]
+        elif op == '>':
+            p[0] = p[1] > p[3]
+        elif op == '>=':
+            p[0] = p[1] >= p[3]
+        elif op == '==':
+            p[0] = p[1] == p[3]
 
 
 def p_expression_group(p):
