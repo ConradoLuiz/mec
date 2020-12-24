@@ -1,0 +1,6 @@
+mec y vale "ola"
+
+loopzin (mec x vale 0; x < 5; x vale x + 1){
+  mostrar(y)
+  mostrar(x)
+}

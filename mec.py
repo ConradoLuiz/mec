@@ -9,7 +9,7 @@ keywords = (
 )
 '''
 keywords = (
-    'mec', 'meczada', 'loop', 'se', 'senao', 'funcao', 'mostrar', 'vale', 'pprt', 'falso', 'vdd'
+    'mec', 'meczada', 'loopzin', 'se', 'senao', 'funcao', 'mostrar', 'vale', 'pprt', 'falso', 'vdd'
 )
 
 tokens = keywords + (
@@ -237,7 +237,7 @@ def p_if_statement_newline_else_newline(p):
 
 def p_loop(p):
     '''
-    command : loop LPAREN statement SEMI cond SEMI statement RPAREN LBRACES NEWLINE program RBRACES
+    command : loopzin LPAREN statement SEMI cond SEMI statement RPAREN LBRACES NEWLINE program RBRACES
     '''
     p[0] = ('loop', p[3], p[5], p[7], p[11])
 
@@ -369,10 +369,6 @@ def interp(prog):
         elif inst == 'if':
             cond_inst = command[1]
             cond_result = interp([cond_inst])
-            # if len(cond_inst) == 4:
-            #     cond_result = cond(*cond_inst)
-            # elif len(cond_inst) == 2:
-            #     cond_result = boolCond(*cond_inst)
 
             if len(command) == 3:
                 if cond_result:
@@ -382,6 +378,11 @@ def interp(prog):
                     interp([command[2]])
                 else:
                     interp([command[3]])
+        elif inst == 'loop':
+            interp([command[1]])
+            while interp([command[2]]):
+                interp([command[4]])
+                interp([command[3]])
 
 
 if len(sys.argv) == 2:
@@ -391,7 +392,7 @@ if len(sys.argv) == 2:
     with open(sys.argv[1]) as f:
         data = f.read()
     prog = parser.parse(data, debug=0)
-    print('FINAL', prog)
+    # print('FINAL', prog)
     interp(prog)
     try:
         pass
