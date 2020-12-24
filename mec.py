@@ -9,7 +9,7 @@ keywords = (
 )
 '''
 keywords = (
-    'mec', 'loop', 'se', 'senao', 'funcao', 'mostrar', 'voltar'
+    'mec', 'meczada', 'loop', 'se', 'senao', 'funcao', 'mostrar', 'voltar'
 )
 
 tokens = keywords + (
@@ -28,7 +28,7 @@ def t_COMMENT(t):
 
 
 def t_ID(t):
-    r'[a-z][a-zA-Z0-9]*'
+    r'[a-z][a-zA-Z0-9_]*'
     if t.value in keywords:
         t.type = t.value
     return t
@@ -64,7 +64,7 @@ def t_error(t):
     t.lexer.skip(1)
 
 
-lex.lex(debug=0)
+lex.lex()
 
 precedence = (
     ('left', 'PLUS', 'MINUS'),
@@ -72,6 +72,7 @@ precedence = (
 )
 
 names = {}
+constants = {}
 
 
 def p_program(p):
@@ -92,13 +93,53 @@ def p_program(p):
 
 def p_statement_assign(p):
     "statement : mec ID EQUALS expression NEWLINE"
-    names[p[2]] = p[4]
+    ID = p[2]
+    if ID in constants:
+        raise ("Constante já declarada")
+    names[ID] = p[4]
+
+
+def p_statement_constant(p):
+    '''statement : meczada ID EQUALS expression 
+                 | meczada ID EQUALS expression NEWLINE'''
+    ID = p[2]
+    if ID in constants:
+        raise ("Constante já declarada")
+    constants[ID] = p[4]
+
+
+def p_statement_reassign(p):
+    '''statement : ID EQUALS expression 
+                 | ID EQUALS expression NEWLINE'''
+    ID = p[1]
+    if ID in constants:
+        raise ("Constante já declarada")
+    names[ID] = p[3]
 
 
 def p_statement_expr(p):
     '''statement : expression
                  | expression NEWLINE'''
-    print(p[1])
+    # print(p[1])
+    pass
+
+
+def p_statement_comment(p):
+    '''statement : COMMENT command
+                 | COMMENT command NEWLINE'''
+    pass
+
+
+def p_statement_command(p):
+    '''statement : command
+                 | command NEWLINE'''
+    p[0] = p[1]
+
+
+def p_command_mostrar(p):
+    '''command : mostrar LPAREN expression RPAREN
+               | mostrar LPAREN expression RPAREN NEWLINE'''
+    print(p[3])
 
 
 def p_expression_binop(p):
@@ -121,15 +162,29 @@ def p_expression_group(p):
     p[0] = p[2]
 
 
-def p_expression_number(p):
+def p_expression_int(p):
     "expression : INTEGER"
     p[0] = int(p[1])
 
 
+def p_expression_float(p):
+    "expression : FLOAT"
+    p[0] = float(p[1])
+
+
+def p_expression_string(p):
+    "expression : STRING"
+    p[0] = str(p[1]).strip('"')
+
+
 def p_expression_name(p):
     "expression : ID"
+    ID = p[1]
     try:
-        p[0] = names[p[1]]
+        if ID in constants:
+            p[0] = constants[ID]
+            return
+        p[0] = names[ID]
     except LookupError:
         print("Undefined name '%s'" % p[1])
         p[0] = 0
@@ -138,8 +193,8 @@ def p_expression_name(p):
 def p_error(p):
     if p:
         print("Erro de sintaxe em'%s'" % p.value)
-    else:
-        print("Erro de sintaxe em EOF")
+    # else:
+    #     print("Erro de sintaxe em EOF")
 
 
 parser = yacc.yacc()
@@ -150,8 +205,9 @@ if len(sys.argv) == 2:
         exit(1)
     with open(sys.argv[1]) as f:
         data = f.read()
+    prog = parser.parse(data, debug=0)
     try:
-        prog = parser.parse(data, debug=0)
         # print('FINAL', prog)
+        pass
     except:
         print("Não foi possivel criar o parser!")

@@ -1,5 +1,9 @@
-mec x = 4
+meczada x = 4
 mec y = 3
 mec z = 5
-x + y * z
-(x + y) * z
+mec w = 1.3
+mec string_mec = "geral mec"
+mec string_outra_string = " outra string"
+
+mostrar(x)
+mostrar(y)
