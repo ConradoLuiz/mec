@@ -1,0 +1,6 @@
+meczada x vale 4
+
+se 10 > 5 { 
+  mostrar(x)
+  mostrar(10)
+}

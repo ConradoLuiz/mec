@@ -127,7 +127,7 @@ def p_statement_assign(p):
 
 
 def p_statement_constant(p):
-    '''statement : meczada ID vale expression 
+    '''statement : meczada ID vale expression
                  | meczada ID vale expression NEWLINE'''
     ID = p[2]
     if ID in constants:
@@ -137,7 +137,7 @@ def p_statement_constant(p):
 
 
 def p_statement_reassign(p):
-    '''statement : ID vale expression 
+    '''statement : ID vale expression
                  | ID vale expression NEWLINE'''
     ID = p[1]
     if ID in constants:
@@ -178,18 +178,11 @@ def p_expression_binop(p):
     if len(p) == 2:
         p[0] = p[1]
     else:
-        if p[2] == '+':
-            p[0] = p[1] + p[3]
-        elif p[2] == '-':
-            p[0] = p[1] - p[3]
-        elif p[2] == '*':
-            p[0] = p[1] * p[3]
-        elif p[2] == '/':
-            p[0] = p[1] / p[3]
+        p[0] = ('expr', p[1], p[2], p[3])
 
 
 def p_condicao(p):
-    '''cond : falso 
+    '''cond : falso
             | vdd
             | expression LT expression
             | expression LE expression
@@ -198,19 +191,9 @@ def p_condicao(p):
             | expression EQUALS EQUALS expression
             '''
     if len(p) == 2:
-        p[0] = p[1]
+        p[0] = ('cond', p[1])
     elif len(p) == 4:
-        op = p[2]
-        if op == '<':
-            p[0] = p[1] < p[3]
-        elif op == '<=':
-            p[0] = p[1] <= p[3]
-        elif op == '>':
-            p[0] = p[1] > p[3]
-        elif op == '>=':
-            p[0] = p[1] >= p[3]
-        elif op == '==':
-            p[0] = p[1] == p[3]
+        p[0] = ('cond', p[1], p[2], p[3])
 
 
 def p_expression_group(p):
@@ -222,40 +205,44 @@ def p_if_statement(p):
     '''
     statement : se expression LBRACES program RBRACES NEWLINE
     '''
-    if p[2]:
-        p[0] = p[4]
-    else:
-        p[0] = ('empty')
+    # if p[2]:
+    #     p[0] = p[4]
+    # else:
+    #     p[0] = ('empty')
+    p[0] = ('if', p[2], p[4])
 
 
 def p_if_statement_newline(p):
     '''
     statement : se expression LBRACES NEWLINE program RBRACES NEWLINE
     '''
-    if p[2]:
-        p[0] = p[5]
-    else:
-        p[0] = ('empty')
+    # if p[2]:
+    #     p[0] = p[5]
+    # else:
+    #     p[0] = ('empty')
+    p[0] = ('if', p[2], p[5])
 
 
 def p_if_statement_newline_else(p):
     '''
     statement : se expression LBRACES NEWLINE program RBRACES senao LBRACES NEWLINE program RBRACES NEWLINE
     '''
-    if p[2]:
-        p[0] = p[5]
-    else:
-        p[0] = p[10]
+    # if p[2]:
+    #     p[0] = p[5]
+    # else:
+    #     p[0] = p[10]
+    p[0] = ('if', p[2], p[5], p[10])
 
 
 def p_if_statement_newline_else_newline(p):
     '''
     statement : se expression LBRACES NEWLINE program RBRACES NEWLINE senao LBRACES NEWLINE program RBRACES NEWLINE
     '''
-    if p[2]:
-        p[0] = p[5]
-    else:
-        p[0] = p[11]
+    # if p[2]:
+    #     p[0] = p[5]
+    # else:
+    #     p[0] = p[11]
+    p[0] = ('if', p[2], p[5], p[10])
 
 
 def p_loop(p):
@@ -303,12 +290,75 @@ def p_error(p):
 parser = yacc.yacc()
 
 
+def mostrar(st, item):
+    print(item)
+
+
+def cond(st, lhs, op, rhs):
+    result = False
+    if op == '<':
+        result = lhs < rhs
+    elif op == '<=':
+        result = lhs <= rhs
+    elif op == '>':
+        result = lhs > rhs
+    elif op == '>=':
+        result = lhs >= rhs
+    elif op == '==':
+        result = lhs == rhs
+    return result
+
+
+def boolCond(st, _bool):
+    if _bool == 'vdd':
+        return True
+    return False
+
+
+def expr(st, lhs, op, rhs):
+    result = None
+    if op == '+':
+        result = lhs + rhs
+    elif op == '-':
+        result = lhs - rhs
+    elif op == '*':
+        result = lhs * rhs
+    elif op == '/':
+        result = lhs / rhs
+    return result
+
+
 def interp(prog):
     for command in prog:
+        inst = command[0]
         if type(command) == list:
             interp(command)
-        elif command[0] == 'mostrar':
-            print(command[1])
+        elif inst == 'mostrar':
+            mostrar(*command)
+        elif inst == 'cond':
+            if len(command) == 4:
+                cond(*command)
+            elif len(command) == 2:
+                boolCond(*command)
+        elif inst == 'expr':
+            expr(*command)
+        elif inst == 'if':
+            cond_inst = command[1]
+            cond_result = False
+
+            if len(cond_inst) == 4:
+                cond_result = cond(*cond_inst)
+            elif len(cond_inst) == 2:
+                cond_result = boolCond(*cond_inst)
+
+            if len(command) == 3:
+                if cond_result:
+                    interp([command[2]])
+            elif len(command) == 4:
+                if cond_result:
+                    interp([command[2]])
+                else:
+                    interp([command[3]])
 
 
 if len(sys.argv) == 2:
