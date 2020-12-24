@@ -1,9 +1,24 @@
-meczada x = 4
-mec y = 3
-mec z = 5
-mec w = 1.3
-mec string_mec = "geral mec"
-mec string_outra_string = " outra string"
+meczada x vale 4
+mec y vale 3
 
 mostrar(x)
 mostrar(y)
+
+se vdd { 
+  mec z vale 10
+  mostrar(x)
+  mostrar(y) 
+  mostrar(z)
+
+  se falso{
+    mostrar("nao aqui entrou falso")
+  } senao {
+    mostrar("entrou aqui")
+  }
+
+} senao {
+  mostrar("falso")
+}
+
+mostrar(99)
+mostrar(100)
