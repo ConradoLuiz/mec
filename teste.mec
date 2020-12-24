@@ -1,6 +1,9 @@
 mec y vale "ola"
+mec x vale 10
 
-loop (mec x vale 0; x < 10; x vale x + 1){
-  mostrar(y)
-  mostrar(x)
-}
+mostrar(2)
+mostrar("Teste")
+mostrar(y)
+mostrar(y + " mundo")
+mostrar(x)
+mostrar(x + 5)

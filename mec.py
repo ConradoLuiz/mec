@@ -81,19 +81,9 @@ def p_program(p):
     '''program : program statement
                | statement'''
     if len(p) == 2 and p[1]:
-        # print('program : statement ->', p[0], p[1])
         p[0] = []
         p[0] = p[1]
     elif len(p) == 3:
-        # print('program : program statement ->', p[0], p[1], p[2])
-        # if p[1] and not p[2]:
-        #     print('entrou so p1')
-        #     p[0] = p[1]
-
-        # if p[2] and not p[1]:
-        #     print('entrou so p2')
-        #     p[0] = p[2]
-
         if p[1] and p[2]:
             # print('entrou p1 e p2')
             if type(p[1]) == tuple:
@@ -122,8 +112,8 @@ def p_statement_assign(p):
     ID = p[2]
     if ID in constants:
         raise ("Constante já declarada")
-    names[ID] = p[4]
-    p[0] = ('empty',)
+    # names[ID] = p[4]
+    p[0] = ('mec', ID, p[4])
 
 
 def p_statement_constant(p):
@@ -132,8 +122,8 @@ def p_statement_constant(p):
     ID = p[2]
     if ID in constants:
         raise ("Constante já declarada")
-    constants[ID] = p[4]
-    p[0] = ('empty',)
+    # constants[ID] = p[4]
+    p[0] = ('meczada', ID, p[4])
 
 
 def p_statement_reassign(p):
@@ -142,8 +132,8 @@ def p_statement_reassign(p):
     ID = p[1]
     if ID in constants:
         raise ("Constante já declarada")
-    names[ID] = p[3]
-    p[0] = ('empty',)
+    # names[ID] = p[3]
+    p[0] = ('mec', ID, p[3])
 
 
 # def p_statement_expr(p):
@@ -191,7 +181,7 @@ def p_condicao(p):
             | expression EQUALS EQUALS expression
             '''
     if len(p) == 2:
-        p[0] = ('cond', p[1])
+        p[0] = ('cond', ('bool', p[1]))
     elif len(p) == 4:
         p[0] = ('cond', p[1], p[2], p[3])
 
@@ -242,7 +232,7 @@ def p_if_statement_newline_else_newline(p):
     #     p[0] = p[5]
     # else:
     #     p[0] = p[11]
-    p[0] = ('if', p[2], p[5], p[10])
+    p[0] = ('if', p[2], p[5], p[11])
 
 
 def p_loop(p):
@@ -254,30 +244,31 @@ def p_loop(p):
 
 def p_expression_int(p):
     "expression : INTEGER"
-    p[0] = int(p[1])
+    p[0] = ('int', int(p[1]))
 
 
 def p_expression_float(p):
     "expression : FLOAT"
-    p[0] = float(p[1])
+    p[0] = ('float', float(p[1]))
 
 
 def p_expression_string(p):
     "expression : STRING"
-    p[0] = str(p[1]).strip('"')
+    p[0] = ('str', str(p[1]).strip('"'))
 
 
 def p_expression_name(p):
     "expression : ID"
-    ID = p[1]
-    try:
-        if ID in constants:
-            p[0] = constants[ID]
-            return
-        p[0] = names[ID]
-    except LookupError:
-        print("Undefined name '%s'" % p[1])
-        p[0] = 0
+
+    p[0] = ('getID', p[1])
+    # try:
+    #     if ID in constants:
+    #         p[0] = constants[ID]
+    #         return
+    #     p[0] = names[ID]
+    # except LookupError:
+    #     print("Undefined name '%s'" % p[1])
+    #     p[0] = 0
 
 
 def p_error(p):
@@ -328,28 +319,60 @@ def expr(st, lhs, op, rhs):
     return result
 
 
+def assign(st, ID, value):
+    global names
+    names[ID] = value
+
+
+def assignConst(st, ID, value):
+    global constants
+    constants[ID] = value
+
+
+def getID(st, ID):
+    try:
+        if ID in constants.keys():
+            return constants[ID]
+        elif ID in names.keys():
+            return names[ID]
+        raise "Variavel não existente"
+    except:
+        print("Variavel não existente")
+        pass
+
+
 def interp(prog):
+    # print(prog)
+    # print(names)
     for command in prog:
         inst = command[0]
         if type(command) == list:
             interp(command)
+        elif inst == 'int' or inst == 'float' or inst == 'str' or inst == 'bool':
+            return command[1]
+        elif inst == 'mec':
+            assign(command[0], command[1], interp([command[2]]))
+        elif inst == 'meczada':
+            assignConst(command[0], command[1], interp([command[2]]))
+        elif inst == 'getID':
+            return getID(*command)
         elif inst == 'mostrar':
-            mostrar(*command)
+            mostrar(command[0], interp([command[1]]))
+        elif inst == 'expr':
+            return expr(command[0], interp([command[1]]),
+                        command[2], interp([command[3]]))
         elif inst == 'cond':
             if len(command) == 4:
-                cond(*command)
+                return cond(command[0], interp([command[1]]), command[2], interp([command[3]]))
             elif len(command) == 2:
-                boolCond(*command)
-        elif inst == 'expr':
-            expr(*command)
+                return boolCond(command[0], interp([command[1]]))
         elif inst == 'if':
             cond_inst = command[1]
-            cond_result = False
-
-            if len(cond_inst) == 4:
-                cond_result = cond(*cond_inst)
-            elif len(cond_inst) == 2:
-                cond_result = boolCond(*cond_inst)
+            cond_result = interp([cond_inst])
+            # if len(cond_inst) == 4:
+            #     cond_result = cond(*cond_inst)
+            # elif len(cond_inst) == 2:
+            #     cond_result = boolCond(*cond_inst)
 
             if len(command) == 3:
                 if cond_result:
@@ -367,7 +390,7 @@ if len(sys.argv) == 2:
         exit(1)
     with open(sys.argv[1]) as f:
         data = f.read()
-    prog = parser.parse(data, debug=1)
+    prog = parser.parse(data, debug=0)
     print('FINAL', prog)
     interp(prog)
     try:
