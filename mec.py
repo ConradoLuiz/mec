@@ -117,7 +117,8 @@ def p_empty(p):
 
 
 def p_statement_assign(p):
-    "statement : mec ID vale expression NEWLINE"
+    '''statement : mec ID vale expression NEWLINE
+                 | mec ID vale expression '''
     ID = p[2]
     if ID in constants:
         raise ("Constante já declarada")
@@ -257,6 +258,13 @@ def p_if_statement_newline_else_newline(p):
         p[0] = p[11]
 
 
+def p_loop(p):
+    '''
+    command : loop LPAREN statement SEMI cond SEMI statement RPAREN LBRACES NEWLINE program RBRACES
+    '''
+    p[0] = ('loop', p[3], p[5], p[7], p[11])
+
+
 def p_expression_int(p):
     "expression : INTEGER"
     p[0] = int(p[1])
@@ -309,7 +317,7 @@ if len(sys.argv) == 2:
         exit(1)
     with open(sys.argv[1]) as f:
         data = f.read()
-    prog = parser.parse(data, debug=0)
+    prog = parser.parse(data, debug=1)
     print('FINAL', prog)
     interp(prog)
     try:
